@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="per.lijun.hannah.mapper.UserMapperCustom" >
+
+  <select id="sqlFriendRequestList" resultType="per.lijun.hannah.entity.vo.FriendRequestVo" parameterType="String">
+    select request.id as requestid, sender.id as sendUserId, sender.username as sendUsername,
+      sender.face_image as sendUserFace, sender.nickname as sendNickname
+    from friends_request request
+    left join user sender on request.send_user_id = sender.id
+    where request.accept_user_id = #{acceptUserid}
+    and request.status = '0'
+    order by request.request_date_time desc
+  </select>
+
+</mapper>

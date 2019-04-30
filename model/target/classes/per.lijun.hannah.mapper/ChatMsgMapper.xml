@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="per.lijun.hannah.mapper.ChatMsgMapper" >
+  <resultMap id="chatMsgMap" type="per.lijun.hannah.entity.ChatMsg" >
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="send_user_id" property="sendUserId" jdbcType="VARCHAR" />
+    <result column="accept_user_id" property="acceptUserId" jdbcType="VARCHAR" />
+    <result column="msg" property="msg" jdbcType="VARCHAR" />
+    <result column="sign_flag" property="signFlag" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="type" property="type" jdbcType="INTEGER" />
+  </resultMap>
+
+
+  <update id="batchUpdateMsgFlag">
+  update chat_msg set sign_flag = 1
+  <where>
+    id in
+    <foreach collection="list" item="msg" index="i" open="(" separator="," close=")">
+      #{msg}
+    </foreach>
+  </where>
+</update>
+
+  <update id="batchSignMsgFlag">
+    update chat_msg set sign_flag = 1
+    where accept_user_id = #{receiverId}
+  </update>
+
+  <update id="updatePushMsgFlag">
+    update chat_msg set sign_flag = 2
+    where id = #{id}
+  </update>
+
+  <select id="getNoReadingMsg" resultMap="chatMsgMap" parameterType="String">
+    select c.id, c.send_user_id, c.accept_user_id, c.msg, c.type, c.create_time
+    from chat_msg c
+    where c.accept_user_id = #{receiverId} and c.sign_flag = 2
+  </select>
+</mapper>

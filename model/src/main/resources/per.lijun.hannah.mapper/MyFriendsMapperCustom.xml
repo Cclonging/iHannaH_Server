@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="per.lijun.hannah.mapper.MyFriendsMapperCustom" >
+
+  <select id="selectAllmyFriends" resultType="per.lijun.hannah.entity.vo.UserVo" parameterType="String">
+    select u.id as id, u.username as username, u.face_image as faceImage,  u.nickname as nickname
+    from user u
+    where u.id in
+    (
+      select f.my_friend_user_id
+      from my_friends f
+      where f.my_user_id = #{userid}
+    )
+    <!--从数据库里面查出数据,需要按每个用户名的字符串的第一个字符如果是汉字则为拼音排序-->
+  </select>
+
+</mapper>
