@@ -78,5 +78,6 @@ public interface UserService {
 
     String operFriendRequest(FriendsRequestBo friendsRequestBo);
 
+    void setUserStatus(String userid, int isOnline);
 
 }

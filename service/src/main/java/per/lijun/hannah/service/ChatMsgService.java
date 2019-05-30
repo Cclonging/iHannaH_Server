@@ -18,4 +18,5 @@ public interface ChatMsgService {
     //获取用户的未读信息
     List<ChatMsg> getNoReadingMsg(String receiverId);
 
+    void removeChatMsg(String myId, String friendId);
 }

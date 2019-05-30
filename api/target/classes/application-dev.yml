@@ -1,7 +1,7 @@
 #访问端口设为 80
-server.port: 80
-#tomcat-url encoding : utf-8
 server:
+  port: 80
+#tomcat-url encoding : utf-8
   tomcat:
     uri-encoding: UTF-8
 
@@ -11,6 +11,20 @@ server:
 
 #jdbc config
 spring:
+  data:
+    mongodb:
+      uri: mongodb://47.101.154.133:27017/runoob
+  redis:
+    database: 0
+    host: 47.101.154.133
+    port: 6379
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: 5000
+        max-idle: 8
+        min-idle: 0
+    timeout: 10000
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://47.101.154.133:3306/hannah?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&serverTimezone=GMT
@@ -26,6 +40,9 @@ spring:
       pool-name: DatabookHikariCP
       max-lifetime: 28740000
       connection-test-query: select 1
+  thymeleaf:
+    cache: false
+
 
 
 #=====================================================================

@@ -12,7 +12,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class QRCodeUtils {
@@ -26,7 +26,7 @@ public class QRCodeUtils {
         /**
          * 定义二维码的参数
          */
-        HashMap hints=new HashMap();
+        ConcurrentHashMap hints=new ConcurrentHashMap();
         hints.put(EncodeHintType.CHARACTER_SET,"utf-8");    //指定字符编码为“utf-8”
         hints.put(EncodeHintType.ERROR_CORRECTION,ErrorCorrectionLevel.M);  //指定二维码的纠错等级为中级
         hints.put(EncodeHintType.MARGIN, 2);    //设置图片的边距
@@ -51,7 +51,7 @@ public class QRCodeUtils {
             image = ImageIO.read(file);
             BinaryBitmap binaryBitmap=new BinaryBitmap(new HybridBinarizer
                                     (new BufferedImageLuminanceSource(image)));
-            HashMap hints=new HashMap();
+            ConcurrentHashMap hints=new ConcurrentHashMap();
             hints.put(EncodeHintType.CHARACTER_SET,"utf-8");    //指定字符编码为“utf-8”
             Result result=formatReader.decode(binaryBitmap,hints);
             return result.toString();

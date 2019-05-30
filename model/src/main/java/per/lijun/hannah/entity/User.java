@@ -23,11 +23,21 @@ public class User {
 
     private String cid;
 
+    private int isOnline;
+
     /**
      * @return id
      */
     public String getId() {
         return id;
+    }
+
+    public int getIsOnline() {
+        return isOnline;
+    }
+
+    public void setIsOnline(int isOnline) {
+        this.isOnline = isOnline;
     }
 
     /**

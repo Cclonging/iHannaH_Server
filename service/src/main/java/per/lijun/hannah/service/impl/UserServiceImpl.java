@@ -217,6 +217,11 @@ public class UserServiceImpl implements UserService {
         return OperFriendsRequestEnum.getMsg(Integer.valueOf(status));
     }
 
+    @Override
+    public void setUserStatus(String userid, int isOnline) {
+        userMapper.updateIsOnline(userid, isOnline);
+    }
+
     public MyFriends queryUserFriends(String userid, User user){
         Example myfriends = new Example(MyFriends.class);
         Example.Criteria fc = myfriends.createCriteria();

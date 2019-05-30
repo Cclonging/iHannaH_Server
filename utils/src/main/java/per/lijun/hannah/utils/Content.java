@@ -3,13 +3,13 @@ package per.lijun.hannah.utils;
 public class Content {
 
     //本机保存二维吗的地址
-    public static final String QR_CODE_PATH = "D:\\data\\hannah\\qrcode\\";
+    public static final String QR_CODE_PATH = "/Users/cc/dev/workspace/idea/data/hannah/qrcode";
 
     //本机保存头像的地址
-    public static final String USER_FACE_PATH = "D:\\data\\hannah\\face\\";
+    public static final String USER_FACE_PATH = "/Users/cc/dev/workspace/idea/data/hannah/face";
 
     //本机保存头像的地址
-    public static final String CHAT_RESOURCE_PATH = "D:\\data\\hannah\\chat\\";
+    public static final String CHAT_RESOURCE_PATH = "/Users/cc/dev/workspace/idea/data/hannah/chat";
 
     //压缩后的后缀
     public static final String BASE64_PNG = "userface64.png";

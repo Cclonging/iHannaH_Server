@@ -39,8 +39,8 @@ public class WsServer {
     }
 
     public void start(){
-        channelFuture = server.bind(88);
-        logger.info("netty websocket start....");
+        channelFuture = server.bind(8880);
+        logger.info(server + "netty websocket start....");
     }
 
 }

@@ -9,11 +9,15 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import per.lijun.hannah.enums.MsgActionEnum;
+import per.lijun.hannah.filter.IrregularitiesFilter;
 import per.lijun.hannah.netty.model.ChatContent;
 import per.lijun.hannah.netty.model.DataContent;
+import per.lijun.hannah.netty.model.relationship.ChannelUserRel;
 import per.lijun.hannah.netty.model.relationship.UserChannelRel;
 import per.lijun.hannah.service.ChatMsgService;
+import per.lijun.hannah.service.UserService;
 import per.lijun.hannah.service.impl.ChatMsgServiceImpl;
 import per.lijun.hannah.utils.JsonUtils;
 import per.lijun.hannah.utils.SpringUtils;
@@ -28,9 +32,11 @@ import java.util.Objects;
  */
 @Slf4j
 public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
-    
 
-    //用于记录和管理所有客户端的channel
+    RedisTemplate<String, String> redisTemplate = (RedisTemplate<String, String>) SpringUtils.getBean("redisTemplate");
+
+    UserService userService = (UserService) SpringUtils.getBean("userServiceImpl");
+    /* 用于记录和管理所有客户端的channel */
     static ChannelGroup clientChannels;
 
     public ChatHandler() {
@@ -43,9 +49,7 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
         //1. 获取信息
         String context = msg.text();
         log.info("accept client " + channel.id().asShortText() + "'s message: " + context);
-        if (Objects.equals("undefined", context)){
-            return;
-        }
+
 
         Channel currentChannel = ctx.channel();
 
@@ -63,6 +67,8 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
             //  2.1 当websocket第一次连接时, 初始化channel, 将channel和userid关联起来
             String senderId = dataContent.getChatContent().getSenderId();
             UserChannelRel.put(senderId, currentChannel);
+            ChannelUserRel.put(currentChannel.id().asLongText(), senderId);
+            userService.setUserStatus(senderId, 1);
 
         }// client send msg to netty server... and netty server should send msg to the other client ...
         else if (action == MsgActionEnum.CHAT.getType()) {
@@ -115,12 +121,8 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
         }//heart beat check
         else if (action == MsgActionEnum.KEEPALIVE.getType()) {
             //  2.4 心跳类型的信息处理(自定义)
-            log.info(dataContent.getChatContent().getSenderId() + " send heart beat to keep " + channel.id().asShortText() + " connecting...");
+            log.info(" send heart beat to keep " + channel.id().asShortText() + " connecting...");
         }
-
-
-
-
     }
 
     /**
@@ -133,6 +135,11 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         clientChannels.add(ctx.channel());
+        redisTemplate.opsForValue().set("hannah_user_count", String.valueOf(clientChannels.size()));
+        String userId = ChannelUserRel.get(ctx.channel().id().asLongText());
+        if(!Objects.isNull(userId)){
+            userService.setUserStatus(userId, 1);
+        }
     }
 
     /**
@@ -145,7 +152,12 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         clientChannels.remove(ctx.channel());
         log.info("客户端断开,channel对应的长id:" + ctx.channel().id().asLongText());
-        log.info("客户端断开,channel对应的短id:" + ctx.channel().id().asShortText());
+        //log.info("客户端断开,channel对应的短id:" + ctx.channel().id().asShortText());
+        redisTemplate.opsForValue().set("hannah_user_count", String.valueOf(clientChannels.size()));
+        String userId = ChannelUserRel.get(ctx.channel().id().asLongText());
+        if(!Objects.isNull(userId)){
+            userService.setUserStatus(userId, 0);
+        }
     }
 
     /**
@@ -171,7 +183,8 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
         //插入数据并得到其id
         String msgId = chatMsgService.saveIntoChatMsg(chatContent);
         chatContent.setMsgId(msgId);
-        chatContent.setContent(per.lijun.illegalRemarks.filter.IrregularitiesFilter.fenci(content, chatContent.getSenderId(), chatContent.getReceiverId()));
+        IrregularitiesFilter irregularitiesFilter = (IrregularitiesFilter) SpringUtils.getBean("irregularitiesFilter");
+        chatContent.setContent(irregularitiesFilter.fenci(content, chatContent.getSenderId(), chatContent.getReceiverId()));
         return chatContent;
     }
 }

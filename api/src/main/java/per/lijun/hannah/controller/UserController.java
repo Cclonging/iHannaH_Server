@@ -5,10 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import per.lijun.hannah.com.FastDFSClient;
 import per.lijun.hannah.com.FileUtils;
@@ -22,6 +20,8 @@ import per.lijun.hannah.service.UserService;
 import per.lijun.hannah.utils.Content;
 import per.lijun.hannah.utils.JSONResult;
 import per.lijun.hannah.utils.MD5Utils;
+
+import javax.annotation.security.PermitAll;
 import java.util.Objects;
 
 import static per.lijun.hannah.com.FileUtils.uploadRes;
@@ -37,6 +37,9 @@ public class UserController {
 
     @Autowired
     private FastDFSClient fastDFSClient;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 注册登录
@@ -54,6 +57,7 @@ public class UserController {
 
         //1. 判断user是否存在,存在则登录, 不存在则注册
         boolean isExit = userService.isExit(user.getUsername());
+        //logger.info("cid" + user.getCid());
         User result = null;
         if (isExit){
             //1.1 登录
@@ -61,7 +65,13 @@ public class UserController {
             if (result == null){
                 return JSONResult.errorMsg("用户名或密码不正确");
             }
-            logger.info(user.getUsername() + "登录");
+            //账号唯一性判断
+            String s = (String) redisTemplate.opsForValue().get(result.getId());
+            if (!Objects.equals(s, user.getCid())){
+                //TODO 向消息队列发送信息，踢出原设备账号
+                redisTemplate.opsForValue().set(result.getId(), user.getCid());
+            }
+            logger.info(user.getUsername() + result.getCid() + "登录");
         }else {
             //1.2 注册
             user.setNickname(user.getUsername());
@@ -69,12 +79,24 @@ public class UserController {
             user.setFaceImage("");
             user.setPassword(MD5Utils.getMD5Str(user.getPassword()));
             result = userService.saveUser(user);
+            //注册唯一性
+            redisTemplate.opsForValue().set(result.getId(), user.getCid());
             logger.info(user.getUsername() + "注册");
         }
 
         UserVo userVo = new UserVo();
         BeanUtils.copyProperties(result,userVo);
         return  JSONResult.ok(userVo);
+    }
+
+    @GetMapping("/isOnlyOne/{userid}")
+    public JSONResult isOnlyOne(@PathVariable("userid")String userid){
+        if (null == userid){
+            return JSONResult.errorMsg("userid is null");
+        }
+        String s = (String) redisTemplate.opsForValue().get(userid);
+        logger.info(userid + "检查是否唯一性登录");
+        return JSONResult.ok(s);
     }
 
     /**
@@ -231,6 +253,20 @@ public class UserController {
         return JSONResult.ok(url);
     }
 
+    @GetMapping("/identificate/{id}/{cid}")
+    public JSONResult identificate(@PathVariable("id") String id, @PathVariable("cid") String cid){
+        if (Objects.isNull(id) || Objects.isNull(cid)){
+            return JSONResult.errorMsg("params are null");
+        }
+        System.out.println(id + " " + cid);
+        String device = (String) redisTemplate.opsForValue().get(id);
+
+        if (!Objects.equals(device, cid)){
+            redisTemplate.opsForValue().set(id, cid);
+            return JSONResult.errorMsg("账号已经在另一台设备上登录，请检查账号安全，重新登录");
+        }
+        return JSONResult.ok();
+    }
 
 
 }

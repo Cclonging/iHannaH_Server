@@ -16,5 +16,5 @@ public interface FriendService {
      */
     List<UserVo> queryAllMyFriends(String userid);
 
-
+    void removeFriend(String MyId, String friendId);
 }

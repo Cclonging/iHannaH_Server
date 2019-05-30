@@ -70,4 +70,9 @@ public class ChatMsgServiceImpl implements ChatMsgService {
         }
         return null;
     }
+
+    @Override
+    public void removeChatMsg(String myId, String friendId) {
+        chatMsgMapper.deleteChatMsg(myId, friendId);
+    }
 }

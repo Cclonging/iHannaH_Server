@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import per.lijun.hannah.entity.User;
 import per.lijun.hannah.entity.vo.UserVo;
+import per.lijun.hannah.mapper.MyFriendsMapper;
 import per.lijun.hannah.mapper.MyFriendsMapperCustom;
 import per.lijun.hannah.mapper.UserMapper;
 import per.lijun.hannah.service.FriendService;
@@ -23,6 +24,8 @@ public class FriendServiceImpl implements FriendService {
     @Autowired
     private MyFriendsMapperCustom myFriendsMapperCustom;
 
+    @Autowired
+    private MyFriendsMapper friendsMapper;
 
     @Override
     @Transactional(propagation = Propagation.SUPPORTS)
@@ -34,6 +37,11 @@ public class FriendServiceImpl implements FriendService {
 
 
         return myFriendsMapperCustom.selectAllmyFriends(userid);
+    }
+
+    @Override
+    public void removeFriend(String MyId, String friendId) {
+        friendsMapper.deleteFriend(MyId, friendId);
     }
 
 }
